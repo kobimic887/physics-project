@@ -203,23 +203,26 @@ function App() {
                 const newV2n = ((m2 - m1) * v2n + 2 * m1 * v1n) / (m1 + m2);
 
                 // Calculate force (change in momentum)
-                const force1 = Math.abs((newV1n - v1n) * m1 * 10); // Scale for display
-                const force2 = Math.abs((newV2n - v2n) * m2 * 10); // Should be equal!
+                // According to Newton's 3rd law: F1 = -F2, so |F1| = |F2|
+                // We calculate the average to ensure they're always equal for display
+                const deltaP1 = Math.abs((newV1n - v1n) * m1);
+                const deltaP2 = Math.abs((newV2n - v2n) * m2);
+                const avgForce = ((deltaP1 + deltaP2) / 2) * 10; // Scale for display
 
-                collisionForce1 = force1;
-                collisionForce2 = force2;
+                collisionForce1 = avgForce;
+                collisionForce2 = avgForce;
 
                 newObjects[i] = {
                   ...obj1,
                   vx: obj1.vx + (newV1n - v1n) * nx,
                   vy: obj1.vy + (newV1n - v1n) * ny,
-                  currentForce: force1,
+                  currentForce: avgForce,
                 };
                 newObjects[j] = {
                   ...obj2,
                   vx: obj2.vx + (newV2n - v2n) * nx,
                   vy: obj2.vy + (newV2n - v2n) * ny,
-                  currentForce: force2,
+                  currentForce: avgForce,
                 };
 
                 // Separate objects to prevent sticking
