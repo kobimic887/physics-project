@@ -3,7 +3,6 @@ import { Play, RotateCcw, Info, Trophy, Target, Zap, Scale } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import './App.css';
 
 // Physics constants
@@ -194,7 +193,7 @@ function App() {
               const distance = Math.sqrt(dx * dx + dy * dy);
               const minDistance = obj1.radius + obj2.radius;
 
-              if (distance < minDistance && distance > 0) {
+              if (distance <= minDistance + 1 && distance > 0) {
                 isColliding = true;
 
                 // Calculate collision forces
@@ -234,7 +233,7 @@ function App() {
                 };
 
                 // Separate objects to prevent sticking
-                const overlap = minDistance - distance;
+                const overlap = Math.max(0, minDistance - distance);
                 const separationX = nx * overlap * 0.5;
                 const separationY = ny * overlap * 0.5;
                 newObjects[i] = { ...newObjects[i], x: obj1.x - separationX, y: obj1.y - separationY };
@@ -244,7 +243,21 @@ function App() {
           }
         }
 
-        setForceData({ obj1Force: collisionForce1, obj2Force: collisionForce2, isColliding });
+        setForceData(prev => {
+          if (isColliding) {
+            return { obj1Force: collisionForce1, obj2Force: collisionForce2, isColliding: true };
+          }
+
+          const decayedObj1 = prev.obj1Force * 0.92;
+          const decayedObj2 = prev.obj2Force * 0.92;
+          const hasForce = decayedObj1 > 0.05 || decayedObj2 > 0.05;
+
+          return {
+            obj1Force: hasForce ? decayedObj1 : 0,
+            obj2Force: hasForce ? decayedObj2 : 0,
+            isColliding: false,
+          };
+        });
 
         return newObjects;
       });
@@ -456,6 +469,10 @@ function App() {
       if (obj) {
         const dx = dragStart.x - dragCurrent.x;
         const dy = dragStart.y - dragCurrent.y;
+        const appliedForce = Math.sqrt(
+          Math.pow(dx * FORCE_MULTIPLIER, 2) +
+          Math.pow(dy * FORCE_MULTIPLIER, 2)
+        );
 
         setObjects(prev =>
           prev.map(o =>
@@ -468,6 +485,14 @@ function App() {
               : o
           )
         );
+
+        if (currentLevel === 2 && appliedForce > 0) {
+          setForceData({
+            obj1Force: appliedForce,
+            obj2Force: appliedForce,
+            isColliding: false,
+          });
+        }
       }
     }
     setIsDragging(false);
@@ -677,31 +702,20 @@ function App() {
                 <CardTitle className="text-lg">מושגי פיזיקה</CardTitle>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="first" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="first">ראשון</TabsTrigger>
-                    <TabsTrigger value="second">שני</TabsTrigger>
-                    <TabsTrigger value="third">שלישי</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="first" className="mt-2">
-                    <div className="text-sm">
-                      <p className="font-semibold mb-1">חוק האינרציה</p>
-                      <p className="text-slate-600">עצמים מתנגדים לשינויים בתנועתם. כדור במנוחה נשאר במנוחה עד שתפעילו עליו כוח!</p>
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="second" className="mt-2">
-                    <div className="text-sm">
-                      <p className="font-semibold mb-1">F = ma</p>
-                      <p className="text-slate-600">כוח שווה למסה כפול תאוצה. לעצמים כבדים יש צורך ביותר כוח כדי להזיז את אותו המרחק.</p>
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="third" className="mt-2">
-                    <div className="text-sm">
-                      <p className="font-semibold mb-1">פעולה ותגובה</p>
-                      <p className="text-slate-600">כששני עצמים מתנגשים, הם מפעילים זה על זה כוחות שווים ונגדיים.</p>
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <p className="font-semibold mb-1">חוק ראשון - אינרציה</p>
+                    <p className="text-slate-600">עצמים מתנגדים לשינויים בתנועתם. כדור במנוחה נשאר במנוחה עד שתפעילו עליו כוח!</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold mb-1">חוק שני - F = ma</p>
+                    <p className="text-slate-600">כוח שווה למסה כפול תאוצה. לעצמים כבדים יש צורך ביותר כוח כדי להזיז את אותו המרחק.</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold mb-1">חוק שלישי - פעולה ותגובה</p>
+                    <p className="text-slate-600">כששני עצמים מתנגשים, הם מפעילים זה על זה כוחות שווים ונגדיים.</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
