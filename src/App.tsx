@@ -545,13 +545,10 @@ function App() {
                           <RotateCcw className="w-4 h-4 mr-2" />
                           שחק שוב
                         </Button>
-                        {currentLevel < levels.length - 1 && (
-                          <Button onClick={() => setCurrentLevel(prev => prev + 1)}>
-                            <Play className="w-4 h-4 mr-2" />
-                            שלב הבא
-                          </Button>
-                        )}
                       </div>
+                      <p className="text-sm text-slate-500 mt-3">
+                        השתמש במספרי השלבים למטה כדי לעבור לשלב הבא
+                      </p>
                     </div>
                   </div>
                 )}
