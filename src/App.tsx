@@ -211,25 +211,26 @@ function App() {
 
                 // Calculate force (change in momentum)
                 // According to Newton's 3rd law: F1 = -F2, so |F1| = |F2|
-                // We calculate the average to ensure they're always equal for display
+                // Each ball experiences force based on its momentum change
                 const deltaP1 = Math.abs((newV1n - v1n) * m1);
                 const deltaP2 = Math.abs((newV2n - v2n) * m2);
-                const avgForce = ((deltaP1 + deltaP2) / 2) * 10; // Scale for display
+                const force1 = deltaP1 * 10; // Scale for display
+                const force2 = deltaP2 * 10; // Scale for display
 
-                collisionForce1 = avgForce;
-                collisionForce2 = avgForce;
+                collisionForce1 = force1;
+                collisionForce2 = force2;
 
                 newObjects[i] = {
                   ...obj1,
                   vx: obj1.vx + (newV1n - v1n) * nx,
                   vy: obj1.vy + (newV1n - v1n) * ny,
-                  currentForce: avgForce,
+                  currentForce: force1,
                 };
                 newObjects[j] = {
                   ...obj2,
                   vx: obj2.vx + (newV2n - v2n) * nx,
                   vy: obj2.vy + (newV2n - v2n) * ny,
-                  currentForce: avgForce,
+                  currentForce: force2,
                 };
 
                 // Separate objects to prevent sticking
@@ -488,8 +489,8 @@ function App() {
 
         if (currentLevel === 2 && appliedForce > 0) {
           setForceData({
-            obj1Force: appliedForce,
-            obj2Force: appliedForce,
+            obj1Force: selectedObject === 1 ? appliedForce : 0,
+            obj2Force: selectedObject === 2 ? appliedForce : 0,
             isColliding: false,
           });
         }
