@@ -101,6 +101,14 @@ function App() {
   });
   const animationRef = useRef<number | null>(null);
 
+  const adjustColor = (color: string, amount: number): string => {
+    const hex = color.replace('#', '');
+    const r = Math.max(0, Math.min(255, parseInt(hex.substring(0, 2), 16) + amount));
+    const g = Math.max(0, Math.min(255, parseInt(hex.substring(2, 4), 16) + amount));
+    const b = Math.max(0, Math.min(255, parseInt(hex.substring(4, 6), 16) + amount));
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  };
+
   const resetLevel = useCallback(() => {
     const level = levels[currentLevel];
     setObjects(level.objects.map(obj => ({ ...obj, vx: 0, vy: 0, reachedTarget: false, currentForce: 0 })));
@@ -203,23 +211,26 @@ function App() {
                 const newV2n = ((m2 - m1) * v2n + 2 * m1 * v1n) / (m1 + m2);
 
                 // Calculate force (change in momentum)
-                const force1 = Math.abs((newV1n - v1n) * m1 * 10); // Scale for display
-                const force2 = Math.abs((newV2n - v2n) * m2 * 10); // Should be equal!
+                // According to Newton's 3rd law: F1 = -F2, so |F1| = |F2|
+                // We calculate the average to ensure they're always equal for display
+                const deltaP1 = Math.abs((newV1n - v1n) * m1);
+                const deltaP2 = Math.abs((newV2n - v2n) * m2);
+                const avgForce = ((deltaP1 + deltaP2) / 2) * 10; // Scale for display
 
-                collisionForce1 = force1;
-                collisionForce2 = force2;
+                collisionForce1 = avgForce;
+                collisionForce2 = avgForce;
 
                 newObjects[i] = {
                   ...obj1,
                   vx: obj1.vx + (newV1n - v1n) * nx,
                   vy: obj1.vy + (newV1n - v1n) * ny,
-                  currentForce: force1,
+                  currentForce: avgForce,
                 };
                 newObjects[j] = {
                   ...obj2,
                   vx: obj2.vx + (newV2n - v2n) * nx,
                   vy: obj2.vy + (newV2n - v2n) * ny,
-                  currentForce: force2,
+                  currentForce: avgForce,
                 };
 
                 // Separate objects to prevent sticking
@@ -463,14 +474,6 @@ function App() {
     setSelectedObject(null);
   };
 
-  const adjustColor = (color: string, amount: number): string => {
-    const hex = color.replace('#', '');
-    const r = Math.max(0, Math.min(255, parseInt(hex.substring(0, 2), 16) + amount));
-    const g = Math.max(0, Math.min(255, parseInt(hex.substring(2, 4), 16) + amount));
-    const b = Math.max(0, Math.min(255, parseInt(hex.substring(4, 6), 16) + amount));
-    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4" dir="rtl">
       <div className="max-w-6xl mx-auto">
@@ -545,13 +548,10 @@ function App() {
                           <RotateCcw className="w-4 h-4 mr-2" />
                           שחק שוב
                         </Button>
-                        {currentLevel < levels.length - 1 && (
-                          <Button onClick={() => setCurrentLevel(prev => prev + 1)}>
-                            <Play className="w-4 h-4 mr-2" />
-                            שלב הבא
-                          </Button>
-                        )}
                       </div>
+                      <p className="text-sm text-slate-500 mt-3">
+                        השתמש במספרי השלבים למטה כדי לעבור לשלב הבא
+                      </p>
                     </div>
                   </div>
                 )}
